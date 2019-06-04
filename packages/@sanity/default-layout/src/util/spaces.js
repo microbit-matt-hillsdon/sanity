@@ -7,10 +7,19 @@ export const CONFIGURED_SPACES = getConfiguredSpaces()
 export const HAS_SPACES = CONFIGURED_SPACES && CONFIGURED_SPACES.length > 0
 
 function getConfiguredSpaces() {
-  if (!config[FEATURE_KEY]) {
+  const spacesConfig = config[FEATURE_KEY]
+  if (!spacesConfig) {
     return null
   }
-  return config[FEATURE_KEY] && config[FEATURE_KEY].map(prepareSpace)
+  const spaces = spacesConfig.map(prepareSpace)
+  if (!spaces.some(s => s.default)) {
+    // This will mean we prefer a development env for someone using `sanity start`.
+    const matchesDataset = spaces.find(s => s.api.dataset === config.api.dataset)
+    if (matchesDataset) {
+      matchesDataset.default = true
+    }
+  }
+  return spaces
 }
 
 function prepareSpace(space) {
